@@ -22,7 +22,13 @@ class Warehouse(MapObject):
         super().__init__(location)
         self.id = id
         self.location = location
-        self.products = Counter({i: p for i, p in enumerate(products)})
+        if isinstance(products, Counter):
+            self.products = Counter(products)
+        else:
+            self.products = Counter({i: p for i, p in enumerate(products)})
+
+    def __repr__(self, *args, **kwargs):
+        return 'Warehouse <{}, {}, {}>'.format(self.id, self.location, self.products)
 
     def clone(self):
         return Warehouse(self.id, self.location, self.products)
@@ -35,8 +41,11 @@ class Order(MapObject):
         self.target = target
         self.products = Counter(products)
 
+    def __repr__(self, *args, **kwargs):
+        return 'Order <{}, {}, {}>'.format(self.id, self.target, self.products)
+
     def clone(self):
-        return Order(self.id, self.target, self.products)
+        return Order(self.id, self.target, self.products.values())
 
 
 class Drone(MapObject):
@@ -46,8 +55,12 @@ class Drone(MapObject):
         self.location = location
         self.releases_at = releases_at
 
-    def load_at_warehouse_and_deliver_to_order(self, warehouse, order):
-        return Drone(self.id, order.location, self.releases_at + self.time_to(warehouse) + warehouse.time_to(order))
+    def __repr__(self, *args, **kwargs):
+        return 'Drone <{}, {}, {}>'.format(self.id, self.location, self.releases_at)
+
+    def load_at_warehouse_and_deliver_to_order(self, warehouse, products, order):
+        return Drone(self.id, order.location,
+                     self.releases_at + self.distance_to(warehouse) + warehouse.distance_to(order) + len(products) * 2)
 
     def clone(self):
         return Drone(self.id, self.location, self.releases_at)
@@ -67,6 +80,10 @@ class LoadCommand(Command):
         self.warehouse_id = warehouse_id
         self.product_type_id = product_type_id
         self.products_count = products_count
+
+    def __repr__(self, *args, **kwargs):
+        return 'Load drone {} at WH {} with product type {} * {} items'.format(
+                self.drone_id, self.warehouse_id, self.product_type_id, self.products_count)
 
     def __str__(self):
         return '{} L {} {} {}'.format(self.drone_id, self.warehouse_id, self.product_type_id, self.products_count)
@@ -89,6 +106,10 @@ class DeliverCommand(Command):
         self.order_id = order_id
         self.product_type_id = product_type_id
         self.products_count = products_count
+
+    def __repr__(self, *args, **kwargs):
+        return 'Deliver drone {} to order {} with product type {} * {} items'.format(
+                self.drone_id, self.order_id, self.product_type_id, self.products_count)
 
     def __str__(self):
         return '{} D {} {} {}'.format(self.drone_id, self.order_id, self.product_type_id, self.products_count)
