@@ -1,18 +1,56 @@
+import math
+from collections import Counter
+
+
 __author__ = 'Andrew Kuchev (kuchevad@gmail.com)'
 
 
-class Warehouse:
+class MapObject:
+    def __init__(self, location):
+        self.location = location
+
+    def distance_to(self, map_object):
+        return math.ceil(math.hypot(self.location[0] - map_object.location[0],
+                                    self.location[1] - map_object.location[1]))
+
+    def time_to(self, map_object):
+        return self.distance_to(map_object) + 1
+
+
+class Warehouse(MapObject):
     def __init__(self, id, location, products):
+        super().__init__(location)
         self.id = id
         self.location = location
-        self.products = products
+        self.products = Counter({i: p for i, p in enumerate(products)})
+
+    def clone(self):
+        return Warehouse(self.id, self.location, self.products)
 
 
-class Order:
-    def __init__(self, id, target, product_types):
+class Order(MapObject):
+    def __init__(self, id, target, products):
+        super().__init__(target)
         self.id = id
         self.target = target
-        self.product_types = product_types
+        self.products = Counter(products)
+
+    def clone(self):
+        return Order(self.id, self.target, self.products)
+
+
+class Drone(MapObject):
+    def __init__(self, id, location, releases_at):
+        super().__init__(location)
+        self.id = id
+        self.location = location
+        self.releases_at = releases_at
+
+    def load_at_warehouse_and_deliver_to_order(self, warehouse, order):
+        return Drone(self.id, order.location, self.releases_at + self.time_to(warehouse) + warehouse.time_to(order))
+
+    def clone(self):
+        return Drone(self.id, self.location, self.releases_at)
 
 
 class Command:
