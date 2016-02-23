@@ -29,18 +29,10 @@ class MagicCommandPredictor:
         loaded_drones = []
 
         for w in nearest_warehouses:
-            # print(w)
-            # print('Required products:', required_products)
-            if not required_products:
-                break
-
             products_to_be_taken = required_products & w.products
-            # print('Products to be taken:', products_to_be_taken)
             while products_to_be_taken:
                 nearest_drone = self.find_nearest_drone(w, drones)
                 products_in_drone = self.load_drone(products_to_be_taken)
-                # print('Products in drone', products_in_drone)
-                # assert products_in_drone, 'There always should be products'
                 released_drone = nearest_drone.load_at_warehouse_and_deliver_to_order(w, products_in_drone, order)
                 products_to_be_taken -= products_in_drone
                 w.products -= products_in_drone
@@ -49,25 +41,18 @@ class MagicCommandPredictor:
                 drones.remove(nearest_drone)
                 drones.append(released_drone)
 
-                # print('Required products:', required_products)
-
         if required_products:
-            # return [], 0
             return []
 
         if not loaded_drones:
-            # return [], 0
             return []
 
         max_release = max(d[1].releases_at for d in loaded_drones)
         if max_release > self.max_turns_count:
-            # print('Wow')
-            # return [], 0
             return []
         else:
             self.drones = drones
             self.warehouses = nearest_warehouses
-            # return self.generate_commands_for_drones(loaded_drones), max_release
             return self.generate_commands_for_drones(loaded_drones)
 
     def load_drone(self, total_number_of_products):
@@ -143,9 +128,6 @@ def run_test():
 
 
 def main():
-    # run_test()
-    # return
-
     rows, cols, drones_n, turns_n, max_payload = [int(x) for x in input().split()]
     product_types_n = int(input())
     product_types_weights = [int(x) for x in input().split()]
@@ -159,7 +141,7 @@ def main():
     predictor = MagicCommandPredictor(drones_n, turns_n, max_payload, product_types_weights, warehouses, orders)
     commands = list(predictor.predict_commands_for_orders(randomize_orders(orders)))
 
-    # pprint(commands)
+    pprint(commands)
     commands_str = [str(c) for c in commands]
     print(len(commands_str))
     print('\n'.join(commands_str))
